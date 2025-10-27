@@ -10,9 +10,6 @@ public class OrderCreateDto
     public OrderStatus? Status { get; set; }
 
     [Required]
-    public decimal TotalPrice { get; set; }
-
-    [Required]
     public int CustomerId { get; set; }
 
     public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
@@ -28,9 +25,6 @@ public class OrderUpdateDto
 
     [Required]
     public OrderStatus Status { get; set; }
-
-    [Required]
-    public decimal TotalPrice { get; set; }
 
     [Required]
     public int CustomerId { get; set; }

@@ -58,25 +58,48 @@ public class OrderController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Order>> PostOrder(OrderCreateDto orderDto)
     {
+        // Validate that all pizzas exist and get their current prices
+        var pizzaIds = orderDto.OrderItems.Select(item => item.PizzaId).Distinct().ToList();
+        var pizzas = await _context.Pizzas
+            .Where(p => pizzaIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Price);
+
+        // Check if all pizzas exist
+        foreach (var itemDto in orderDto.OrderItems)
+        {
+            if (!pizzas.ContainsKey(itemDto.PizzaId))
+            {
+                return BadRequest($"Pizza with ID {itemDto.PizzaId} does not exist.");
+            }
+        }
+
         var order = new Order
         {
             OrderDate = orderDto.OrderDate ?? DateTime.UtcNow,
             Status = orderDto.Status ?? OrderStatus.Pending,
-            TotalPrice = orderDto.TotalPrice,
             CustomerId = orderDto.CustomerId
         };
 
+        decimal calculatedTotal = 0;
+
         foreach (var itemDto in orderDto.OrderItems)
         {
+            var pizzaPrice = pizzas[itemDto.PizzaId];
+            var itemTotal = pizzaPrice * itemDto.Quantity;
+            calculatedTotal += itemTotal;
+
             var orderItem = new OrderItem
             {
                 Quantity = itemDto.Quantity,
-                Price = itemDto.Price,
+                Price = pizzaPrice,
                 PizzaId = itemDto.PizzaId,
                 Order = order
             };
             order.OrderItems.Add(orderItem);
         }
+
+        // Set the calculated total price
+        order.TotalPrice = calculatedTotal;
 
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
@@ -107,24 +130,48 @@ public class OrderController : ControllerBase
             return NotFound();
         }
 
+        // Validate that all pizzas exist and get their current prices
+        var pizzaIds = orderDto.OrderItems.Select(item => item.PizzaId).Distinct().ToList();
+        var pizzas = await _context.Pizzas
+            .Where(p => pizzaIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Price);
+
+        // Check if all pizzas exist
+        foreach (var itemDto in orderDto.OrderItems)
+        {
+            if (!pizzas.ContainsKey(itemDto.PizzaId))
+            {
+                return BadRequest($"Pizza with ID {itemDto.PizzaId} does not exist.");
+            }
+        }
+
         existingOrder.OrderDate = orderDto.OrderDate;
         existingOrder.Status = orderDto.Status;
-        existingOrder.TotalPrice = orderDto.TotalPrice;
         existingOrder.CustomerId = orderDto.CustomerId;
 
+        // Remove existing order items
         _context.OrderItems.RemoveRange(existingOrder.OrderItems);
+
+        decimal calculatedTotal = 0;
 
         foreach (var itemDto in orderDto.OrderItems)
         {
+            var pizzaPrice = pizzas[itemDto.PizzaId];
+            var itemTotal = pizzaPrice * itemDto.Quantity;
+            calculatedTotal += itemTotal;
+
             var orderItem = new OrderItem
             {
                 Quantity = itemDto.Quantity,
-                Price = itemDto.Price,
+                Price = pizzaPrice,
                 PizzaId = itemDto.PizzaId,
                 OrderId = existingOrder.Id
             };
             existingOrder.OrderItems.Add(orderItem);
         }
+
+        // Set the calculated total price
+        existingOrder.TotalPrice = calculatedTotal;
 
         try
         {
