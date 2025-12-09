@@ -25,6 +25,10 @@ public class Customer
     [MaxLength(255)]
     public string PasswordHash { get; set; } = string.Empty;
 
+    [Required]
+    [MaxLength(20)]
+    public string Role { get; set; } = "User";
+
     [Column(TypeName = "decimal(10,2)")]
     public decimal OrderAmount { get; set; }
 

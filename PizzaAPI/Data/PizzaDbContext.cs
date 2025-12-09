@@ -27,8 +27,9 @@ public class PizzaDbContext : DbContext
             entity.Property(e => e.LastName).HasColumnName("last_name");
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.PasswordHash).HasColumnName("password_hash");
+            entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.OrderAmount).HasColumnName("order_amount");
-            
+
             entity.HasIndex(e => e.Email).IsUnique();
         });
 

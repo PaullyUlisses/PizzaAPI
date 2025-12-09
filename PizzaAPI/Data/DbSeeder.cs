@@ -100,10 +100,20 @@ public static class DbSeeder
             {
                 new Customer
                 {
+                    FirstName = "Admin",
+                    LastName = "User",
+                    Email = "admin@pizzaapi.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                    Role = "Admin",
+                    OrderAmount = 0
+                },
+                new Customer
+                {
                     FirstName = "John",
                     LastName = "Doe",
                     Email = "john.doe@email.com",
-                    PasswordHash = "hashed_password_1",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!"),
+                    Role = "User",
                     OrderAmount = 0
                 },
                 new Customer
@@ -111,7 +121,8 @@ public static class DbSeeder
                     FirstName = "Jane",
                     LastName = "Smith",
                     Email = "jane.smith@email.com",
-                    PasswordHash = "hashed_password_2",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!"),
+                    Role = "User",
                     OrderAmount = 0
                 },
                 new Customer
@@ -119,7 +130,8 @@ public static class DbSeeder
                     FirstName = "Mike",
                     LastName = "Johnson",
                     Email = "mike.johnson@email.com",
-                    PasswordHash = "hashed_password_3",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123!"),
+                    Role = "User",
                     OrderAmount = 0
                 }
             };

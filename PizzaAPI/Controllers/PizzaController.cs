@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PizzaAPI.Data;
@@ -71,7 +72,9 @@ public class PizzaController : ControllerBase
             .ToListAsync();
     }
 
+    // Admin only: Create pizza
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Pizza>> PostPizza(PizzaCreateDto pizzaDto)
     {
         var pizza = new Pizza
@@ -101,7 +104,9 @@ public class PizzaController : ControllerBase
         return CreatedAtAction(nameof(GetPizza), new { id = pizza.Id }, createdPizza);
     }
 
+    // Admin only: Update pizza
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PutPizza(int id, PizzaUpdateDto pizzaDto)
     {
         if (id != pizzaDto.Id)
@@ -153,7 +158,9 @@ public class PizzaController : ControllerBase
         return NoContent();
     }
 
+    // Admin only: Update pizza price
     [HttpPut("{id}/price")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdatePizzaPrice(int id, [FromBody] decimal price)
     {
         var pizza = await _context.Pizzas.FindAsync(id);
@@ -173,7 +180,9 @@ public class PizzaController : ControllerBase
         return NoContent();
     }
 
+    // Admin only: Delete pizza
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeletePizza(int id)
     {
         var pizza = await _context.Pizzas.FindAsync(id);

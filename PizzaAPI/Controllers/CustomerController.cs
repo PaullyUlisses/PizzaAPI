@@ -1,12 +1,16 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PizzaAPI.Data;
+using PizzaAPI.DTOs;
 using PizzaAPI.Models;
+using System.Security.Claims;
 
 namespace PizzaAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize] // All endpoints require authentication
 public class CustomerController : ControllerBase
 {
     private readonly PizzaDbContext _context;
@@ -16,45 +20,77 @@ public class CustomerController : ControllerBase
         _context = context;
     }
 
+    // Admin only: Get all customers
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
     {
-        return await _context.Customers.Include(c => c.Orders).ToListAsync();
+        var customers = await _context.Customers.ToListAsync();
+        return Ok(customers.Select(MapToDto));
     }
 
+    // Get own profile or any profile if admin
     [HttpGet("{id}")]
-    public async Task<ActionResult<Customer>> GetCustomer(int id)
+    public async Task<ActionResult<CustomerDto>> GetCustomer(int id)
     {
-        var customer = await _context.Customers
-            .Include(c => c.Orders)
-            .FirstOrDefaultAsync(c => c.Id == id);
+        var currentUserId = GetCurrentUserId();
+        var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        // Users can only view their own profile, admins can view any
+        if (currentUserRole != "Admin" && currentUserId != id)
+        {
+            return Forbid();
+        }
+
+        var customer = await _context.Customers.FindAsync(id);
 
         if (customer == null)
         {
             return NotFound();
         }
 
-        return customer;
+        return Ok(MapToDto(customer));
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
-    {
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
-    }
-
+    // Update own profile or any profile if admin
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCustomer(int id, Customer customer)
+    public async Task<IActionResult> PutCustomer(int id, CustomerUpdateDto customerDto)
     {
-        if (id != customer.Id)
+        if (id != customerDto.Id)
         {
             return BadRequest();
         }
 
-        _context.Entry(customer).State = EntityState.Modified;
+        var currentUserId = GetCurrentUserId();
+        var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        // Users can only update their own profile, admins can update any
+        if (currentUserRole != "Admin" && currentUserId != id)
+        {
+            return Forbid();
+        }
+
+        var existingCustomer = await _context.Customers.FindAsync(id);
+        if (existingCustomer == null)
+        {
+            return NotFound();
+        }
+
+        // Check if email is being changed to one that already exists
+        if (existingCustomer.Email != customerDto.Email)
+        {
+            var emailExists = await _context.Customers
+                .AnyAsync(c => c.Email == customerDto.Email && c.Id != id);
+
+            if (emailExists)
+            {
+                return BadRequest(new { message = "Email already exists" });
+            }
+        }
+
+        existingCustomer.FirstName = customerDto.FirstName;
+        existingCustomer.LastName = customerDto.LastName;
+        existingCustomer.Email = customerDto.Email;
 
         try
         {
@@ -75,7 +111,9 @@ public class CustomerController : ControllerBase
         return NoContent();
     }
 
+    // Admin only: Delete customer
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteCustomer(int id)
     {
         var customer = await _context.Customers.FindAsync(id);
@@ -90,8 +128,27 @@ public class CustomerController : ControllerBase
         return NoContent();
     }
 
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(userIdClaim, out int userId) ? userId : 0;
+    }
+
     private bool CustomerExists(int id)
     {
         return _context.Customers.Any(e => e.Id == id);
+    }
+
+    private static CustomerDto MapToDto(Customer customer)
+    {
+        return new CustomerDto
+        {
+            Id = customer.Id,
+            FirstName = customer.FirstName,
+            LastName = customer.LastName,
+            Email = customer.Email,
+            Role = customer.Role,
+            OrderAmount = customer.OrderAmount
+        };
     }
 }
