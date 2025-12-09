@@ -201,7 +201,115 @@ public class OrderController : ControllerBase
             return NotFound();
         }
 
+        // Validate cancellation rules
+        if (status == OrderStatus.Cancelled && 
+            order.Status != OrderStatus.Pending && 
+            order.Status != OrderStatus.Confirmed)
+        {
+            return BadRequest($"Orders can only be cancelled when in 'Pending' or 'Confirmed' status. Current status: {order.Status}");
+        }
+
         order.Status = status;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/confirm")]
+    public async Task<IActionResult> ConfirmOrder(int id)
+    {
+        var order = await _context.Orders.FindAsync(id);
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        if (order.Status != OrderStatus.Pending)
+        {
+            return BadRequest($"Only pending orders can be confirmed. Current status: {order.Status}");
+        }
+
+        order.Status = OrderStatus.Confirmed;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/cancel")]
+    public async Task<IActionResult> CancelOrder(int id)
+    {
+        var order = await _context.Orders.FindAsync(id);
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Confirmed)
+        {
+            return BadRequest($"Orders can only be cancelled when in 'Pending' or 'Confirmed' status. Current status: {order.Status}");
+        }
+
+        order.Status = OrderStatus.Cancelled;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/start")]
+    public async Task<IActionResult> StartOrder(int id)
+    {
+        var order = await _context.Orders.FindAsync(id);
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        if (order.Status != OrderStatus.Confirmed)
+        {
+            return BadRequest($"Only confirmed orders can be started. Current status: {order.Status}");
+        }
+
+        order.Status = OrderStatus.InProgress;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/ready")]
+    public async Task<IActionResult> MarkOrderReady(int id)
+    {
+        var order = await _context.Orders.FindAsync(id);
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        if (order.Status != OrderStatus.InProgress)
+        {
+            return BadRequest($"Only in-progress orders can be marked as ready. Current status: {order.Status}");
+        }
+
+        order.Status = OrderStatus.Ready;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/deliver")]
+    public async Task<IActionResult> DeliverOrder(int id)
+    {
+        var order = await _context.Orders.FindAsync(id);
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        if (order.Status != OrderStatus.Ready)
+        {
+            return BadRequest($"Only ready orders can be delivered. Current status: {order.Status}");
+        }
+
+        order.Status = OrderStatus.Delivered;
         await _context.SaveChangesAsync();
 
         return NoContent();

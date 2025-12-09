@@ -12,7 +12,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-      - ConnectionStrings__DefaultConnection=Server=mysql;Database=PizzaDB;User=pizzauser;Password=pizzapass;Port=3306;
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=PizzaDB;User=pizzauser;Password=pizzapass;
     depends_on:
       mysql:
         condition: service_healthy
@@ -33,8 +33,6 @@ services:
       MYSQL_DATABASE: PizzaDB
       MYSQL_USER: pizzauser
       MYSQL_PASSWORD: pizzapass
-    ports:
-      - "3306:3306"  # External access for testing
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
