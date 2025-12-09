@@ -192,7 +192,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/status")]
+    [HttpPut("status/{id}")]
     public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] OrderStatus status)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -215,7 +215,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/confirm")]
+    [HttpPut("confirm/{id}")]
     public async Task<IActionResult> ConfirmOrder(int id)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -235,7 +235,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/cancel")]
+    [HttpPut("cancel/{id}")]
     public async Task<IActionResult> CancelOrder(int id)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -255,7 +255,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/start")]
+    [HttpPut("start/{id}")]
     public async Task<IActionResult> StartOrder(int id)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -275,7 +275,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/ready")]
+    [HttpPut("ready/{id}")]
     public async Task<IActionResult> MarkOrderReady(int id)
     {
         var order = await _context.Orders.FindAsync(id);
@@ -295,7 +295,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("{id}/deliver")]
+    [HttpPut("deliver/{id}")]
     public async Task<IActionResult> DeliverOrder(int id)
     {
         var order = await _context.Orders.FindAsync(id);
