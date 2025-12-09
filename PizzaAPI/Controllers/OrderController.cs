@@ -192,7 +192,7 @@ public class OrderController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("status/{id}")]
+    [HttpPatch("status/{id}")]
     public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] OrderStatus status)
     {
         var order = await _context.Orders.FindAsync(id);
